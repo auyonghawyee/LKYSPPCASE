@@ -91,7 +91,9 @@ a{color:inherit;}
   font-family:'Barlow', sans-serif; font-weight:700; font-size:0.76rem;
   letter-spacing:0.03em; border:none; border-radius:999px;
   padding:8px 14px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  transition:top 0.25s ease;
 }
+.lang-toggle.scrolled{top:10px;}
 .lang-toggle:active{transform:scale(0.96);}
 
 /* ---------- section frame ---------- */
@@ -976,6 +978,7 @@ function refreshDynamicText(){
 
 // scroll progress
 const fill = document.getElementById('progressFill');
+const langToggleBtn = document.getElementById('langToggle');
 function onScroll(){
   const h = document.documentElement;
   const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
@@ -987,6 +990,8 @@ function onScroll(){
   const past = rect.top < window.innerHeight * 0.5;
   const heroDone = window.scrollY > window.innerHeight * 0.6;
   if(heroDone && !past){ pill.classList.add('show'); } else { pill.classList.remove('show'); }
+
+  if(window.scrollY > 40){ langToggleBtn.classList.add('scrolled'); } else { langToggleBtn.classList.remove('scrolled'); }
 }
 document.addEventListener('scroll', onScroll, {passive:true});
 onScroll();
