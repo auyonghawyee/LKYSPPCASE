@@ -1104,13 +1104,13 @@ const translatingLabel = document.getElementById('translatingLabel');
 const translatingProgressFill = document.getElementById('translatingProgressFill');
 const translatingPercent = document.getElementById('translatingPercent');
 const translatingMessages = [
-  'Readying translation engine…',
-  'Loading Chinese dictionary…',
-  'Dakota Crescent → 达科达弯',
-  'HDB → 建屋发展局',
-  'Checking accuracy…',
-  'Untangling em dashes…',
-  'Finalising translation…'
+  { text: 'Loading Chinese dictionary…', duration: 900 },  // first thing shown, needs time to actually be read
+  { text: 'Readying translation engine…', duration: 350 },
+  { text: 'Dakota Crescent → 达科达弯', duration: 350 },
+  { text: 'HDB → 建屋发展局', duration: 350 },
+  { text: 'Checking accuracy…', duration: 350 },
+  { text: 'Untangling em dashes…', duration: 350 },
+  { text: 'Finalising translation…', duration: 350 }
 ];
 const translatingProgressSteps = [
   { t: 0,    pct: 0,   label: '0%' },
@@ -1127,19 +1127,17 @@ document.getElementById('langToggle').addEventListener('click', ()=>{
     hasFakedTranslation = true;
     const totalMs = 3000;
 
-    let msgIndex = 0;
-    translatingLabel.textContent = translatingMessages[0];
+    translatingLabel.textContent = translatingMessages[0].text;
     translatingProgressFill.style.width = '0%';
     translatingPercent.textContent = '0%';
     translatingOverlay.classList.add('show');
 
-    const stepMs = totalMs / translatingMessages.length;
-    const msgInterval = setInterval(()=>{
-      msgIndex++;
-      if(msgIndex < translatingMessages.length){
-        translatingLabel.textContent = translatingMessages[msgIndex];
-      }
-    }, stepMs);
+    let cumulative = translatingMessages[0].duration;
+    for(let i = 1; i < translatingMessages.length; i++){
+      const msg = translatingMessages[i];
+      setTimeout(()=>{ translatingLabel.textContent = msg.text; }, cumulative);
+      cumulative += msg.duration;
+    }
 
     translatingProgressSteps.forEach(step=>{
       setTimeout(()=>{
@@ -1149,7 +1147,6 @@ document.getElementById('langToggle').addEventListener('click', ()=>{
     });
 
     setTimeout(()=>{
-      clearInterval(msgInterval);
       applyLanguageSwitch();               // swap happens while overlay still covers the page
       setTimeout(()=>{ translatingOverlay.classList.remove('show'); }, 60);
     }, totalMs);
