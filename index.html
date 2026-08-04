@@ -1085,14 +1085,29 @@ function applyLanguageSwitch(){
 let hasFakedTranslation = false;
 const translatingOverlay = document.getElementById('translatingOverlay');
 const translatingLabel = document.getElementById('translatingLabel');
+const translatingMessages = [
+  'Loading Chinese dictionary…',
+  'Checking accuracy…',
+  'Untangling em dashes…',
+  'Finalising translation…'
+];
 
 document.getElementById('langToggle').addEventListener('click', ()=>{
   const switchingToZh = currentLang === 'en';
   if(switchingToZh && !hasFakedTranslation){
     hasFakedTranslation = true;
-    translatingLabel.textContent = 'Translating…';
+    let msgIndex = 0;
+    translatingLabel.textContent = translatingMessages[0];
     translatingOverlay.classList.add('show');
+    const stepMs = 2000 / translatingMessages.length;
+    const msgInterval = setInterval(()=>{
+      msgIndex++;
+      if(msgIndex < translatingMessages.length){
+        translatingLabel.textContent = translatingMessages[msgIndex];
+      }
+    }, stepMs);
     setTimeout(()=>{
+      clearInterval(msgInterval);
       applyLanguageSwitch();               // swap happens while overlay still covers the page
       setTimeout(()=>{ translatingOverlay.classList.remove('show'); }, 60);
     }, 2000);
