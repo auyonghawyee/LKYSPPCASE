@@ -96,6 +96,27 @@ a{color:inherit;}
 .lang-toggle.scrolled{top:10px;}
 .lang-toggle:active{transform:scale(0.96);}
 
+/* ---------- fake "translating" loading screen (first switch only, for fun) ---------- */
+.translating-overlay{
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(20,18,15,0.94);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.45s ease;
+}
+.translating-overlay.show{opacity:1; pointer-events:auto;}
+.translating-spinner{
+  width:34px; height:34px; border-radius:50%;
+  border:3px solid rgba(255,255,255,0.22);
+  border-top-color:var(--signage);
+  animation:translating-spin 0.75s linear infinite;
+}
+@keyframes translating-spin{to{transform:rotate(360deg);}}
+.translating-label{
+  font-family:'Barlow', sans-serif; font-weight:600; font-size:0.92rem;
+  letter-spacing:0.04em; color:rgba(242,236,224,0.9);
+}
+
 /* ---------- section nav dots ---------- */
 .nav-dots{
   position:fixed; right:12px; top:50%; transform:translateY(-50%); z-index:500;
@@ -515,6 +536,10 @@ footer .linklist{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
 
 <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
 <button class="lang-toggle" id="langToggle" aria-label="Switch language">中文 Beta</button>
+<div class="translating-overlay" id="translatingOverlay">
+  <div class="translating-spinner"></div>
+  <div class="translating-label" id="translatingLabel">Translating…</div>
+</div>
 <nav class="nav-dots" id="navDots"></nav>
 <a href="#stakeholders" class="jump-pill" id="jumpPill">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
@@ -1042,7 +1067,7 @@ document.querySelectorAll('[data-zh]').forEach(el=>{
   el.dataset.en = el.innerHTML;
 });
 
-document.getElementById('langToggle').addEventListener('click', ()=>{
+function applyLanguageSwitch(){
   currentLang = currentLang === 'en' ? 'zh' : 'en';
   document.documentElement.lang = currentLang === 'zh' ? 'zh-Hans' : 'en';
   document.getElementById('langToggle').textContent = currentLang === 'zh' ? 'EN' : '中文 Beta';
@@ -1052,6 +1077,25 @@ document.getElementById('langToggle').addEventListener('click', ()=>{
   // refresh any JS-driven dynamic text to match the new language
   refreshDynamicText();
   refreshNavLabels();
+}
+
+let hasFakedTranslation = false;
+const translatingOverlay = document.getElementById('translatingOverlay');
+const translatingLabel = document.getElementById('translatingLabel');
+
+document.getElementById('langToggle').addEventListener('click', ()=>{
+  const switchingToZh = currentLang === 'en';
+  if(switchingToZh && !hasFakedTranslation){
+    hasFakedTranslation = true;
+    translatingLabel.textContent = 'Translating…';
+    translatingOverlay.classList.add('show');
+    setTimeout(()=>{
+      applyLanguageSwitch();               // swap happens while overlay still covers the page
+      setTimeout(()=>{ translatingOverlay.classList.remove('show'); }, 60);
+    }, 2000);
+  } else {
+    applyLanguageSwitch();
+  }
 });
 
 function refreshDynamicText(){
