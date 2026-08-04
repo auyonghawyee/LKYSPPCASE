@@ -116,6 +116,20 @@ a{color:inherit;}
 .translating-label{
   font-family:'Barlow', sans-serif; font-weight:600; font-size:0.92rem;
   letter-spacing:0.04em; color:rgba(242,236,224,0.9);
+  min-width:220px; text-align:center;
+}
+.translating-progress-track{
+  width:180px; height:4px; border-radius:999px; overflow:hidden;
+  background:rgba(255,255,255,0.15);
+}
+.translating-progress-fill{
+  height:100%; width:0%;
+  background:var(--signage);
+  transition:width 0.3s ease;
+}
+.translating-percent{
+  font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:0.85rem;
+  letter-spacing:0.04em; color:rgba(242,236,224,0.6);
 }
 
 /* ---------- section nav dots ---------- */
@@ -540,6 +554,8 @@ footer .linklist{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
 <div class="translating-overlay" id="translatingOverlay">
   <div class="translating-spinner"></div>
   <div class="translating-label" id="translatingLabel">Translating…</div>
+  <div class="translating-progress-track"><div class="translating-progress-fill" id="translatingProgressFill"></div></div>
+  <div class="translating-percent" id="translatingPercent">0%</div>
 </div>
 <nav class="nav-dots" id="navDots"></nav>
 <a href="#stakeholders" class="jump-pill" id="jumpPill">
@@ -1085,32 +1101,58 @@ function applyLanguageSwitch(){
 let hasFakedTranslation = false;
 const translatingOverlay = document.getElementById('translatingOverlay');
 const translatingLabel = document.getElementById('translatingLabel');
+const translatingProgressFill = document.getElementById('translatingProgressFill');
+const translatingPercent = document.getElementById('translatingPercent');
 const translatingMessages = [
+  'Readying translation engine…',
   'Loading Chinese dictionary…',
+  'Dakota Crescent → 达科达弯',
+  'HDB → 建屋发展局',
   'Checking accuracy…',
   'Untangling em dashes…',
   'Finalising translation…'
+];
+const translatingProgressSteps = [
+  { t: 0,    pct: 0,   label: '0%' },
+  { t: 400,  pct: 25,  label: '25%' },
+  { t: 900,  pct: 50,  label: '50%' },
+  { t: 1600, pct: 75,  label: '75%' },
+  { t: 2500, pct: 90,  label: '90%' },   // classic loading-bar stall near the end
+  { t: 3000, pct: 100, label: '100% — Done' }
 ];
 
 document.getElementById('langToggle').addEventListener('click', ()=>{
   const switchingToZh = currentLang === 'en';
   if(switchingToZh && !hasFakedTranslation){
     hasFakedTranslation = true;
+    const totalMs = 3000;
+
     let msgIndex = 0;
     translatingLabel.textContent = translatingMessages[0];
+    translatingProgressFill.style.width = '0%';
+    translatingPercent.textContent = '0%';
     translatingOverlay.classList.add('show');
-    const stepMs = 2000 / translatingMessages.length;
+
+    const stepMs = totalMs / translatingMessages.length;
     const msgInterval = setInterval(()=>{
       msgIndex++;
       if(msgIndex < translatingMessages.length){
         translatingLabel.textContent = translatingMessages[msgIndex];
       }
     }, stepMs);
+
+    translatingProgressSteps.forEach(step=>{
+      setTimeout(()=>{
+        translatingProgressFill.style.width = step.pct + '%';
+        translatingPercent.textContent = step.label;
+      }, step.t);
+    });
+
     setTimeout(()=>{
       clearInterval(msgInterval);
       applyLanguageSwitch();               // swap happens while overlay still covers the page
       setTimeout(()=>{ translatingOverlay.classList.remove('show'); }, 60);
-    }, 2000);
+    }, totalMs);
   } else {
     applyLanguageSwitch();
   }
